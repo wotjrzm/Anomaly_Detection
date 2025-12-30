@@ -71,12 +71,19 @@ def get_normal_center(model, dataloader, device):
                 mu, _ = model.encode(x[y==0].to(device))
                 vectors.append(mu.cpu())
     
+    
+    # Calculate Mean and Covariance
     center = torch.cat(vectors, dim=0).mean(dim=0)
-    return center.to(device)
+    cov = torch.cov(torch.cat(vectors, dim=0).T)
+    
+    # Inverse Covariance (add epsilon for stability)
+    cov_inv = torch.linalg.inv(cov + torch.eye(cov.size(0)).to(cov.device) * 1e-5)
+    
+    return center.to(device), cov_inv.to(device)
 
-def evaluate_hybrid(model, dataloader, normal_center, device):
+def evaluate_hybrid(model, dataloader, normal_center, cov_inv, device):
     """
-    Hybrid Scoring: Reconstruction Error + Latent Distance
+    Hybrid Scoring: Reconstruction Error + Mahalanobis Distance
     """
     model.eval()
     all_scores = []
@@ -91,8 +98,15 @@ def evaluate_hybrid(model, dataloader, normal_center, device):
             recon_x, mu, _, _ = model(x)
             recon_score = torch.mean(torch.abs(x - recon_x), dim=1)
             
-            # 2. Latent Distance Score (Euclidean)
-            latent_dist = torch.norm(mu - normal_center, p=2, dim=1)
+            # 2. Latent Distance Score (Mahalanobis)
+            # dist = sqrt( (z-mu)^T * S^-1 * (z-mu) )
+            diff = mu - normal_center
+            # Batch-wise Mahalanobis: diag(diff @ cov_inv @ diff.T)
+            # More efficient: sum((diff @ cov_inv) * diff, dim=1)
+            
+            left_term = torch.matmul(diff, cov_inv) # (B, D)
+            mahalanobis_sq = torch.sum(left_term * diff, dim=1) # (B,)
+            latent_dist = torch.sqrt(mahalanobis_sq)
             
             # 3. Final Hybrid Score
             final_score = recon_score + latent_dist
@@ -131,12 +145,12 @@ if __name__ == "__main__":
     # 4. Save Model
     torch.save(model.state_dict(), "best_model.pth")
     
-    normal_center = get_normal_center(model, train_loader, CONFIG['DEVICE'])
+    normal_center, normal_cov_inv = get_normal_center(model, train_loader, CONFIG['DEVICE'])
     print(f"Normal Center Calculated. Shape: {normal_center.shape}")
 
     # 5. Hybrid Evaluation
     print("\nStarting Hybrid Evaluation...")
-    scores, labels = evaluate_hybrid(model, test_loader, normal_center, CONFIG['DEVICE'])
+    scores, labels = evaluate_hybrid(model, test_loader, normal_center, normal_cov_inv, CONFIG['DEVICE'])
 
     # 6. Metrics
     auroc = roc_auc_score(labels, scores)

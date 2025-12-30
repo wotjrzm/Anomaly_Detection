@@ -23,8 +23,9 @@ class ContrastiveDataset(Dataset):
         y = self.y[idx]
 
         if self.mode == 'train' and y == 1:
-            noise = torch.randn_like(x) * self.noise_level
-            x = x + noise
+            # Masking Augmentation
+            mask = torch.rand_like(x) > self.noise_level
+            x = x * mask.float()
 
         return x, y
 
