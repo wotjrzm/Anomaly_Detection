@@ -164,4 +164,4 @@ if __name__ == "__main__":
     # 4. 핵심 그래프 3종 그리기 (분포, PR Curve, 혼동행렬)
     plot_performance_metrics(scores, labels)
     
-    print("\n🎉 분석 완료! 'image/vis_performance_metrics.png' 파일을 확인하세요.")
+    print("\n분석 완료 'image/vis_performance_metrics.png'")

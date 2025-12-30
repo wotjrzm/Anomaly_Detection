@@ -162,7 +162,7 @@ if __name__ == "__main__":
 
     print(f"\n[Final Result (Hybrid Score)]")
     print(f"AUROC : {auroc:.4f}")
-    print(f"AUPRC : {auprc:.4f} (기대하세요!)")
+    print(f"AUPRC : {auprc:.4f}")
 
     # 7. Threshold
     precisions, recalls, thresholds = precision_recall_curve(labels, scores)
