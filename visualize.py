@@ -15,7 +15,7 @@ from model import TransformerVAE
 CONFIG = {
     'SEED': 42,
     'BATCH_SIZE': 256,
-    'LATENT_DIM': 4,
+    'LATENT_DIM': 16,
     'DEVICE': 'cuda' if torch.cuda.is_available() else 'cpu'
 }
 
