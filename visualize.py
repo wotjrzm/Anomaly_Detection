@@ -1,4 +1,5 @@
 import torch
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -24,7 +25,7 @@ def load_model_and_data():
     
     model = TransformerVAE(input_dim=input_dim, latent_dim=CONFIG['LATENT_DIM']).to(CONFIG['DEVICE'])
     try:
-        model.load_state_dict(torch.load("best_model.pth", map_location=CONFIG['DEVICE']))
+        model.load_state_dict(torch.load("model/best_model.pth", map_location=CONFIG['DEVICE']))
         print("'best_model.pth' 로드 성공!")
     except Exception as e:
         print(f"모델 로드 실패: {e}")
@@ -140,8 +141,12 @@ def plot_performance_metrics(scores, labels):
     plt.yticks([0.5, 1.5], ['Normal', 'Fraud'])
 
     plt.tight_layout()
-    plt.savefig("vis_performance_metrics.png")
-    print("✅ 저장 완료: vis_performance_metrics.png")
+    if not os.path.exists('image'):
+        os.makedirs('image')
+    
+    save_path = "image/vis_performance_metrics.png"
+    plt.savefig(save_path)
+    print(f"✅ 저장 완료: {save_path}")
 
 # ==========================================
 # Main Execution
@@ -159,4 +164,4 @@ if __name__ == "__main__":
     # 4. 핵심 그래프 3종 그리기 (분포, PR Curve, 혼동행렬)
     plot_performance_metrics(scores, labels)
     
-    print("\n🎉 분석 완료! 'vis_performance_metrics.png' 파일을 확인하세요.")
+    print("\n🎉 분석 완료! 'image/vis_performance_metrics.png' 파일을 확인하세요.")
