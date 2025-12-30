@@ -12,3 +12,7 @@ env/
 
 # Data
 data/
+
+# Model
+model/
+*.pth
