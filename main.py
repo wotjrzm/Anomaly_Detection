@@ -1,4 +1,5 @@
 import torch
+import os
 import torch.optim as optim
 import numpy as np
 from sklearn.metrics import roc_auc_score, average_precision_score, precision_recall_curve, f1_score
@@ -143,7 +144,10 @@ if __name__ == "__main__":
         print(f"Epoch [{epoch}/{CONFIG['EPOCHS']}] Loss: {avg_loss:.4f}")
 
     # 4. Save Model
-    torch.save(model.state_dict(), "best_model.pth")
+    if not os.path.exists('model'):
+        os.makedirs('model')
+    
+    torch.save(model.state_dict(), "model/best_model.pth")
     
     normal_center, normal_cov_inv = get_normal_center(model, train_loader, CONFIG['DEVICE'])
     print(f"Normal Center Calculated. Shape: {normal_center.shape}")
